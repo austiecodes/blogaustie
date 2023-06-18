@@ -1,10 +1,13 @@
 ---
-title: iOS 中的 escaping 逃逸闭包
+title: escaping 逃逸闭包的一些应用
 date: 2023-4-08
 lang: zh-CN
 ---
 
-`@escaping` 被称为逃逸闭包。该闭包会在函数执行完成之后再调用。
+`@escaping` 被称为逃逸闭包。该闭包会在函数执行完成之后再调用。在学习iOS开发的实践中，我发现 `@escaping` 常常被用来处理异步回调的情况。在这篇文章中，我将会分享一些我在实践中遇到的 `@escaping` 的用法。
+
+
+## 用逃逸闭包将函数内部的参数传递出去
 
 现在假设我们已经有了一个 `AuthManager` 类用来管理我们 App 的 API 验证授权 (OAuth2.0)。
 
@@ -29,24 +32,66 @@ lang: zh-CN
     }
 ```
 
+在这里我们可以看到该方法会调用 `AuthManager` 中的 `withValidToken` 方法，该方法的作用是使得 token 永远保持有效状态。如果无效则会刷新。其实在`withValidToken` 也使用了逃逸闭包，这里暂且按下不表，后面再更新。
 
+通过 `completion(request)` 我们将 `URLRequest` 传递给了调用者。这样调用者就可以使用 `URLRequest` 去调用 API 了。
+
+我们看看如何调用。
+
+## 用逃逸闭包返回网络请求的结果
 
 ```swift
-    public func withValidToken(completion: @escaping (String) -> Void) {
-        guard !refreshingToken else {
-            onRefreshBlocks.append(completion)
-            return
-        }
-        if shouldRefreshToken {
-            // Refresh
-            refreshIfNeeded { [weak self] success in
-                if let token = self?.accessToken, success {
-                    completion(token)
-                }
+    public func getFeaturedPlaylists(completion: @escaping ((Result<FeaturedPlaylistsResponse, Error>) -> Void)) {
+        let url = URL(string: Constants.baseAPIURL + "/browse/featured-playlists?limit=20")
+        performRequest(url: url, type: .GET, completion: completion)
+    }
+
+    private func performRequest<T: Decodable>(url: URL?, type: HTTPMethod, completion: @escaping (Result<T, Error>) -> Void) {
+    createRequest(with: url, type: type) { request in
+        let task = URLSession.shared.dataTask(with: request) { data, _, error in
+            guard let data = data, error == nil else {
+                completion(.failure(APIError.failedToGetData))
+                return
+            }
+
+            do {
+                let result = try JSONDecoder().decode(T.self, from: data)
+                completion(.success(result))
+            }
+            catch {
+                completion(.failure(error))
             }
         }
-        else if let token = accessToken {
-            completion(token)
+        task.resume()
+    }
+    
+```
+
+`performRequest` 中的代码同样是需要备多次重复的。这个方法接受的最后一个参数同样是一个闭包。该闭包的作用是将 `Result` 传递给调用者。不过此时我们先来看看其他部分。该方法调用了`createRequest`方法，并传入了一个闭包。
+
+在方法内部，它首先调用了 `createRequest` 方法来创建一个 URLRequest 对象。然后，它使用 `URLSession.shared.dataTask(with:completionHandler:)` 方法发起异步网络请求，并在请求完成后处理响应。当请求成功返回数据时，使用 `JSONDecoder` 对返回的数据进行解码，并将解码后的结果通过 `completion(.success(result))` 返回给调用者。如果请求失败或解码过程中发生错误，则通过 `completion(.failure(error))` 返回错误信息。
+通过使用泛型 <T: Decodable>，可以灵活地传入不同类型的模型对象来进行网络请求，并通过 `Result` 类型的闭包参数返回请求结果。
+
+## 处理请求结果（成功还是失败）
+最后 `getFeaturedPlaylists` 方法调用了 `performRequest` 方法，并传入了一个闭包。我们在真正调用 `getFeaturedPlaylists` 方法的时候，代码如下:
+
+```swift
+    group.enter()
+    APICaller.shared.getFeaturedPlaylists { result in
+        handleResult(group, result: result, modelStorage: &featuredPlaylist)
+    }
+    
+    func handleResult<ModelType>(_ group: DispatchGroup, result: Result<ModelType, Error>, modelStorage: inout ModelType?) -> Void {
+        defer {
+            group.leave()
+        }
+        switch result {
+        case .success(let model):
+            modelStorage = model
+        case .failure(let error):
+            print(error.localizedDescription)
         }
     }
 ```
+
+在 `DispatchGroup`中创建任务。而我们为`getFeaturedPlaylists` 传入的 `completion` 其实就是一个 `switch case`。
