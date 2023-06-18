@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-color: 255 255 255;
+    --fg-color: theme(colors.zinc.700);
+    --fg-hover-color: theme(colors.zinc.900);
+    --fg-secondary-color: theme(colors.zinc.500);
+    --fg-secondary-hover-color: theme(colors.zinc.700);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg-color: 24 24 27;
+      --fg-color: theme(colors.zinc.300);
+      --fg-hover-color: theme(colors.zinc.100);
+      --fg-secondary-color: theme(colors.zinc.400);
+      --fg-secondary-hover-color: theme(colors.zinc.200);
+    }
+  }
+}
+
+@layer components {
+  .mobile-header {
+    @apply md:hidden text-3xl tracking-tight font-bold my-5 z-20 sticky;
+  }
+}
+
+html {
+  @apply scroll-pt-8 md:scroll-pt-14 scroll-smooth;
+}
+
+.prose h2 a,
+.prose h3 a,
+.prose h4 a {
+  @apply no-underline relative;
+}
+
+.prose h2 a::before,
+.prose h3 a::before,
+.prose h4 a::before {
+  @apply absolute -left-4 text-zinc-300 dark:text-zinc-500 opacity-0 transition-opacity;
+  content: '#';
+}
+
+.prose h2 a:hover::before,
+.prose h3 a:hover::before,
+.prose h4 a:hover::before {
+  @apply opacity-100;
+}
+
+.prose a {
+  @apply underline-offset-[0.1em];
+  transition: text-underline-offset 300ms;
+}
+
+.prose a:hover {
+  @apply underline-offset-[0.15em] text-fg-hover-color;
+  transition: text-underline-offset 200ms;
+}
+
+#blur-bar {
+  @apply w-full h-20 fixed top-0 gradient-mask-b-0 backdrop-blur bg-white/50 pointer-events-none select-none z-10;
+}
+
+#blur-bar::after {
+  @apply absolute h-full w-full content-[""] bg-gradient-to-b from-white/80 to-transparent;
+}

@@ -1,0 +1,38 @@
+---
+date: 2021-10-17
+title: 在 Linux 上使用 GoldenDict
+description: Linux
+lang: zh-CN
+---
+
+
+之前 在Linux 上面一直没有什么特别好的查单词软件，我在 Mac 上面用的 Aurora Dictionary（用M1加载的iOS App），但是在 Linux 上面用了GoldenDict 后发现实在是太好用了。
+
+## 安装
+简单介绍下。
+
+
+把你下载好的离线词典放在同一个文件夹下面，我这里还是比较推荐直接在 `./.goldendict` 下面新建一个 dicts 文件夹，然后放里面就好。
+
+
+添加本地的离线词典
+
+
+编辑-词典，然后选择存放离线词典的文件夹就好了，有多层的话，勾选上递归搜索就行。
+
+## 添加在线词典
+我个人觉得最好的还是剑桥的汉英在线词典。
+
+我觉得最好是在编辑-首选项-网络中勾选上“启动web插件”，“不使用下GoldenDict UA”比较好，这样子不会有网页的适配问题。
+
+
+剑桥在线的话，在编辑-词典-网站中添加就好。这样子就行：
+
+``
+https://dictionary.cambridge.org/dictionary/english-chinese-simplified/%GDWORD%
+``
+接下来是一些我觉得比较好的设置：
+
+首先把全局快捷键改称 Ctrl+G+D，比原来连续两个 F11 直觉得多。
+
+然后是一定要勾选上“关闭至托盘”，不然的话查完词一关窗口就直接推出程序了。

@@ -1,0 +1,52 @@
+---
+title: iOS 中的 escaping 逃逸闭包
+date: 2023-4-08
+lang: zh-CN
+---
+
+`@escaping` 被称为逃逸闭包。该闭包会在函数执行完成之后再调用。
+
+现在假设我们已经有了一个 `AuthManager` 类用来管理我们 App 的 API 验证授权 (OAuth2.0)。
+
+我们在 `APICaller.swift` 中需要经常创建 `URLRequest` 去调用 API，因此将这段代码抽出来复用。
+```swift
+    private func createRequest(
+        with url: URL?,
+        type: HTTPMethod,
+        completion: @escaping (URLRequest) -> Void
+    ) {
+        AuthManager.shared.withValidToken { token in
+            guard let apiURL = url else {
+                return
+            }
+            var request = URLRequest(url: apiURL)
+            request.setValue("Bearer \(token)",
+                             forHTTPHeaderField: "Authorization")
+            request.httpMethod = type.rawValue
+            request.timeoutInterval = 30
+            completion(request)
+        }
+    }
+```
+
+
+
+```swift
+    public func withValidToken(completion: @escaping (String) -> Void) {
+        guard !refreshingToken else {
+            onRefreshBlocks.append(completion)
+            return
+        }
+        if shouldRefreshToken {
+            // Refresh
+            refreshIfNeeded { [weak self] success in
+                if let token = self?.accessToken, success {
+                    completion(token)
+                }
+            }
+        }
+        else if let token = accessToken {
+            completion(token)
+        }
+    }
+```
