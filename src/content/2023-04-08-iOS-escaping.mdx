@@ -32,7 +32,7 @@ lang: zh-CN
     }
 ```
 
-在这里我们可以看到该方法会调用 `AuthManager` 中的 `withValidToken` 方法，该方法的作用是使得 token 永远保持有效状态。如果无效则会刷新。其实在`withValidToken` 也使用了逃逸闭包，这里暂且按下不表，后面再更新。
+在这里我们可以看到该方法会调用 `AuthManager` 中的 `withValidToken` 方法，该方法的作用是使得 token 永远保持有效状态。如果无效则会刷新。其实在`withValidToken` 也使用了逃逸闭包，这里暂且按下不表。
 
 通过 `completion(request)` 我们将 `URLRequest` 传递给了调用者。这样调用者就可以使用 `URLRequest` 去调用 API 了。
 
@@ -70,7 +70,7 @@ lang: zh-CN
 `performRequest` 中的代码同样是需要备多次重复的。这个方法接受的最后一个参数同样是一个闭包。该闭包的作用是将 `Result` 传递给调用者。不过此时我们先来看看其他部分。该方法调用了`createRequest`方法，并传入了一个闭包。
 
 在方法内部，它首先调用了 `createRequest` 方法来创建一个 URLRequest 对象。然后，它使用 `URLSession.shared.dataTask(with:completionHandler:)` 方法发起异步网络请求，并在请求完成后处理响应。当请求成功返回数据时，使用 `JSONDecoder` 对返回的数据进行解码，并将解码后的结果通过 `completion(.success(result))` 返回给调用者。如果请求失败或解码过程中发生错误，则通过 `completion(.failure(error))` 返回错误信息。
-通过使用泛型 <T: Decodable>，可以灵活地传入不同类型的模型对象来进行网络请求，并通过 `Result` 类型的闭包参数返回请求结果。
+通过使用泛型 `<T: Decodable>`，可以灵活地传入不同类型的模型对象来进行网络请求，并通过 `Result` 类型的闭包参数返回请求结果。
 
 ## 处理请求结果（成功还是失败）
 最后 `getFeaturedPlaylists` 方法调用了 `performRequest` 方法，并传入了一个闭包。我们在真正调用 `getFeaturedPlaylists` 方法的时候，代码如下:
@@ -94,4 +94,5 @@ lang: zh-CN
     }
 ```
 
-在 `DispatchGroup`中创建任务。而我们为`getFeaturedPlaylists` 传入的 `completion` 其实就是一个 `switch case`。
+在 `DispatchGroup`中创建任务。而我们为`getFeaturedPlaylists` 传入的 `completion` 其实就是一个 `switch case` 语句。当请求成功时，我们将 `modelStorage` 赋值为 `model`。当请求失败时，我们打印出错误信息。
+
