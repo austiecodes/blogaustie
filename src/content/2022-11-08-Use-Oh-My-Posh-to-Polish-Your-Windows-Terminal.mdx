@@ -16,19 +16,23 @@ https://ohmyposh.dev/docs/migrating
 ## Installation
 Windows 直接用 winget 安装就行了。运行下面这条命令，过一会就装上了。如果长时间没反应，那就是网络问题了（墙国特色)
 
-``shell
+```shell
 winget install JanDeDobbeleer.OhMyPosh -s winget
-``
+```
 
 ## Configuration
 运行下面这条命令创建 pwsh 的 profile 文件
 
-``shell
+```shell
 New-Item -Path $PROFILE -Type File -Force
-``
+```
 
 最好还是用VSCode去编辑该文件，如果你下载了VSCode，但是 code 命令没有反应的话，搜索一下“添加VSCode到环境变量”接口。
 
 然后用 `code $PROFILE` 这条命令，在文件内写入 `oh-my-posh init pwsh --config ~/jandedobbeleer.omp.json | Invoke-Expression` 保存即可。如果无法使用 code 请确保已经将 vscode 添加到环境变量。
 
 如果想要其他的主题，在官网下载好相关的 json 之后，将 ` ~/.jandedobbeleer.omp.json`替换为你下载下来的 json 文件的路径就行了。
+
+## 配置 PowerShell 字体
+个人使用的是FiraCode Nerd Font这个字体。下载之后，在 `Windows Terminal - 设置 - PowerShell - 外观` 里面改变字体就行。 
+
