@@ -13,23 +13,23 @@ lang: zh-CN
 
 我们在 `APICaller.swift` 中需要经常创建 `URLRequest` 去调用 API，因此将这段代码抽出来复用。
 ```swift
-    private func createRequest(
-        with url: URL?,
-        type: HTTPMethod,
-        completion: @escaping (URLRequest) -> Void
-    ) {
-        AuthManager.shared.withValidToken { token in
-            guard let apiURL = url else {
-                return
-            }
-            var request = URLRequest(url: apiURL)
-            request.setValue("Bearer \(token)",
-                             forHTTPHeaderField: "Authorization")
-            request.httpMethod = type.rawValue
-            request.timeoutInterval = 30
-            completion(request)
+private func createRequest(
+    with url: URL?,
+    type: HTTPMethod,
+    completion: @escaping (URLRequest) -> Void
+) {
+    AuthManager.shared.withValidToken { token in
+        guard let apiURL = url else {
+            return
         }
+        var request = URLRequest(url: apiURL)
+        request.setValue("Bearer \(token)",
+                            forHTTPHeaderField: "Authorization")
+        request.httpMethod = type.rawValue
+        request.timeoutInterval = 30
+        completion(request)
     }
+}
 ```
 
 在这里我们可以看到该方法会调用 `AuthManager` 中的 `withValidToken` 方法，该方法的作用是使得 token 永远保持有效状态。如果无效则会刷新。其实在`withValidToken` 也使用了逃逸闭包，这里暂且按下不表。
@@ -41,29 +41,29 @@ lang: zh-CN
 ## 用逃逸闭包返回网络请求的结果
 
 ```swift
-    public func getFeaturedPlaylists(completion: @escaping ((Result<FeaturedPlaylistsResponse, Error>) -> Void)) {
-        let url = URL(string: Constants.baseAPIURL + "/browse/featured-playlists?limit=20")
-        performRequest(url: url, type: .GET, completion: completion)
-    }
+public func getFeaturedPlaylists(completion: @escaping ((Result<FeaturedPlaylistsResponse, Error>) -> Void)) {
+    let url = URL(string: Constants.baseAPIURL + "/browse/featured-playlists?limit=20")
+    performRequest(url: url, type: .GET, completion: completion)
+}
 
-    private func performRequest<T: Decodable>(url: URL?, type: HTTPMethod, completion: @escaping (Result<T, Error>) -> Void) {
-    createRequest(with: url, type: type) { request in
-        let task = URLSession.shared.dataTask(with: request) { data, _, error in
-            guard let data = data, error == nil else {
-                completion(.failure(APIError.failedToGetData))
-                return
-            }
-
-            do {
-                let result = try JSONDecoder().decode(T.self, from: data)
-                completion(.success(result))
-            }
-            catch {
-                completion(.failure(error))
-            }
+private func performRequest<T: Decodable>(url: URL?, type: HTTPMethod, completion: @escaping (Result<T, Error>) -> Void) {
+createRequest(with: url, type: type) { request in
+    let task = URLSession.shared.dataTask(with: request) { data, _, error in
+        guard let data = data, error == nil else {
+            completion(.failure(APIError.failedToGetData))
+            return
         }
-        task.resume()
+
+        do {
+            let result = try JSONDecoder().decode(T.self, from: data)
+            completion(.success(result))
+        }
+        catch {
+            completion(.failure(error))
+        }
     }
+    task.resume()
+}
     
 ```
 
@@ -76,22 +76,22 @@ lang: zh-CN
 最后 `getFeaturedPlaylists` 方法调用了 `performRequest` 方法，并传入了一个闭包。我们在真正调用 `getFeaturedPlaylists` 方法的时候，代码如下:
 
 ```swift
-    group.enter()
-    APICaller.shared.getFeaturedPlaylists { result in
-        handleResult(group, result: result, modelStorage: &featuredPlaylist)
+group.enter()
+APICaller.shared.getFeaturedPlaylists { result in
+    handleResult(group, result: result, modelStorage: &featuredPlaylist)
+}
+
+func handleResult<ModelType>(_ group: DispatchGroup, result: Result<ModelType, Error>, modelStorage: inout ModelType?) -> Void {
+    defer {
+        group.leave()
     }
-    
-    func handleResult<ModelType>(_ group: DispatchGroup, result: Result<ModelType, Error>, modelStorage: inout ModelType?) -> Void {
-        defer {
-            group.leave()
-        }
-        switch result {
-        case .success(let model):
-            modelStorage = model
-        case .failure(let error):
-            print(error.localizedDescription)
-        }
+    switch result {
+    case .success(let model):
+        modelStorage = model
+    case .failure(let error):
+        print(error.localizedDescription)
     }
+}
 ```
 
 在 `DispatchGroup`中创建任务。而我们为`getFeaturedPlaylists` 传入的 `completion` 其实就是一个 `switch case` 语句。当请求成功时，我们将 `modelStorage` 赋值为 `model`。当请求失败时，我们打印出错误信息。

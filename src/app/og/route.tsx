@@ -19,7 +19,7 @@ export async function GET(request: Request) {
             flexDirection: 'column',
             alignItems: 'flex-start',
             justifyContent: 'center',
-            backgroundImage: `url(https://sixian.li/og-bg.png)`,
+            backgroundImage: `url(https://blog.austie.me/banner.png)`,
           }}
         >
           <div
