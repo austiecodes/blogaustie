@@ -5,34 +5,38 @@ lang: zh-CN
 ---
 
 
+
 目前你用简体中文搜索到 Oh My Posh 安装方法大概都用了这一条命令：`Import-Module oh-my-posh`
 
 事实上这种方式已经不再被 Oh My Posh 官方支持了，当然你可以用这个方法安装，只不过每次打开你的 Windows Terminal 都会弹出一大串提示信息，官方已经在网站上说明了
 
 https://ohmyposh.dev/docs/migrating
 
-如果英语还算行的话，直接看着官网的文档安装就行了。但是既然你已经搜索到这里，那么...
-
 ## Installation
-Windows 直接用 winget 安装就行了。运行下面这条命令，过一会就装上了。如果长时间没反应，那就是网络问题了（墙国特色)
+Windows 直接用 winget 安装就行了。运行下面这条命令，过一会就装上了。如果长时间没反应，那就是网络问题了。
 
 ```shell
 winget install JanDeDobbeleer.OhMyPosh -s winget
 ```
 
 ## Configuration
-运行下面这条命令创建 pwsh 的 profile 文件
+
+安装完成之后需要运行一次下面的命令初始化：
 
 ```shell
-New-Item -Path $PROFILE -Type File -Force
+oh-my-posh init pwsh | Invoke-Expression
 ```
 
-最好还是用VSCode去编辑该文件，如果你下载了VSCode，但是 code 命令没有反应的话，搜索一下“添加VSCode到环境变量”接口。
+接下来是更换主题，以往我们需要自行修改 oh-my-posh 使用的 json 文件，但是现在可以在 Terminal 里面直接输入 `Get-PoshThemes` 来查看可用的主题。oh-my-posh 会将其仓库中所有的主题配置文件下载到本地。
 
-然后用 `code $PROFILE` 这条命令，在文件内写入 `oh-my-posh init pwsh --config ~/jandedobbeleer.omp.json | Invoke-Expression` 保存即可。如果无法使用 code 请确保已经将 vscode 添加到环境变量。
+```shell
+ oh-my-posh init pwsh --config 'C:\Users\austie\AppData\Local\Programs\oh-my-posh\themes\jandedobbeleer.omp.json' | Invoke-Expression
+```
+接下来只要将`jandedobbeleer`替换成你想要的主题名称就可以了。
 
-如果想要其他的主题，在官网下载好相关的 json 之后，将 ` ~/.jandedobbeleer.omp.json`替换为你下载下来的 json 文件的路径就行了。
+部分主题需要我们使用支持 glyphs 的字体，如 `FiraCode Nerd Font`。 设置过程如下：
+Windows Terminal - PowerShell - 外观 - 字体 - 选择 FiraCode Nerd Font。
 
-## 配置 PowerShell 字体
-个人使用的是FiraCode Nerd Font这个字体。下载之后，在 `Windows Terminal - 设置 - PowerShell - 外观` 里面改变字体就行。 
+
+
 
