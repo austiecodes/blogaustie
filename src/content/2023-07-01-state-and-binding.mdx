@@ -1,0 +1,54 @@
+# @State 和 @Binding 
+
+在 SwiftUI 中，Apple 提供了一个新的特性可以让我们对结构体的值进行修改。这个方法就是 `@State` 属性装饰器。
+通常来说，我们在结构体中声明的属性都是不可变的，但是如果我们使用 `@State` 来修饰属性，那么这个属性就可以被修改了。使用 `@State` 的好处还是很多的。比如：
+
+- 数据驱动的 UI 更新：当被 `@State` 包装的变量的值改变时，SwiftUI 会自动重新渲染依赖于这个变量的视图，从而使视图的显示内容与变量的最新值保持一致。
+
+- 简化状态管理：`@State` 提供了一种简单有效的方法来在 SwiftUI 视图中管理本地状态。你只需要声明一个 `@State` 变量，然后在你需要修改状态时更新它的值，SwiftUI 会处理剩下的所有事情，如存储状态、观察变化并触发视图的重新渲染。
+
+- 值语义：Swift 中的结构体是值类型，它们在被复制时会创建一个全新的副本。然而，`@State` 让你可以在值类型的环境中享受到引用语义。当你修改 `@State` 变量的值时，你是在修改原始数据，而不是它的一个副本。
+
+
+SwiftUI 将使用 `@State` 装饰器的变量存储在一个共享的存储空间内，并且该值不由其所在的结构体管理。并且 SwiftUI 可以在销毁结构体的情况依然持有该变量。（听起来好玄幻，等我后续研究再来继续深入挖掘）
+
+当然 `@State` 为我们提供方便的同时，也会带来一些限制。比如下面这个例子：
+
+```swift
+import SwiftUI
+
+struct PushButton: View {
+    let title: String
+    @State var isOn: Bool
+    
+    var onColors = [Color.red, Color.yellow]
+    var offColors = [Color(white:0.6), Color(white: 0.4)]
+    
+    var body: some View {
+        Button(title) {
+            isOn.toggle()
+        }
+        .padding()
+        .background(LinearGradient(gradient: Gradient(colors: isOn ? onColors : offColors), startPoint: .top, endPoint: .bottom))
+        .foregroundColor(.white)
+        .clipShape(Capsule())
+        .shadow(radius: isOn ? 0 : 5)
+    }
+}
+
+struct ContentView: View {
+    
+    @State var rememberMe = false
+    var body: some View {
+        VStack{
+            PushButton(title: "Remember Me", isOn: rememberMe)
+            Text(rememberMe ? "on" : "off")
+        }
+    }
+
+}
+```
+
+我们定义了一个按钮，并且在 `ContentView` 中实例化，传入了两个值，一个是按钮的标题，一个是按钮的状态。当我们点击按钮时，按钮的状态会发生改变，从而触发按钮的重新渲染。这里我们使用了 `@State` 来修饰按钮的状态，这样 SwiftUI 就可以知道按钮的状态发生了改变，从而触发按钮的重新渲染。然而，如果你实际在 Xcode 中运行上面代码的预览的话，你会发现 `Text(rememberMe ? "on" : "off")` 的条件渲染似乎没有生效。这是因为该值在传入的时候，仅仅传入的是一个副本，而 `PushButton` 仅仅根据自身所持有的 `@State var isOn` 变量的改变来渲染。如果我们要使得二者能够同步，则应该使用 `@Binding` 来修饰 `isOn` 变量。
+
+
